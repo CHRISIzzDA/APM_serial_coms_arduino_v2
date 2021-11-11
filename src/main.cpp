@@ -16,7 +16,8 @@ void loop() {
 
         Serial.print("Read |");
         Serial.print(receive_buffer);
-        Serial.println("|");
+        Serial.print("| this is from the arduino");
+        Serial.println("\t");
     }
 
     if (receive_buffer == "on")
