@@ -1,9 +1,11 @@
 #include <Arduino.h>
 
+#define StatusLED 13
+
 String receive_buffer;
 
 void setup() {
-    pinMode(13, OUTPUT);
+    pinMode(StatusLED, OUTPUT);
     pinMode(A0, OUTPUT);
     Serial.begin(9600);
 }
@@ -14,18 +16,17 @@ void loop() {
     {
         receive_buffer = Serial.readStringUntil('\n');
 
-        Serial.print("Read |");
+        Serial.print("Read: |");
         Serial.print(receive_buffer);
-        Serial.print("| this is from the arduino");
-        Serial.println("\t");
+        Serial.println("|");
     }
 
     if (receive_buffer == "on")
     {
-        digitalWrite(13 , HIGH);
+        digitalWrite(StatusLED , HIGH);
     }
     else if (receive_buffer == "off")
     {
-        digitalWrite(13, LOW);
+        digitalWrite(StatusLED, LOW);
     }
 }
