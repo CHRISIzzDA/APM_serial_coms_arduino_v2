@@ -11,16 +11,15 @@
 #define fan2 6
 
 char *token;
-char *pump_token;
-char *depth_token;
-char *throughput_token;
-char *fan_token;
 const char *delimiter = "<>;";
-char  mystring[64];
+char  myString[64];
+char pumpData[6];
+char fanData[6];
 const byte numChars = 64;
 char receivedChars[numChars]; // an array to store the received data
 
 boolean newData = false;
+boolean tokenFlag = false;
 
 
 void recvWithEndMarker() {
@@ -49,29 +48,60 @@ void recvWithEndMarker() {
 
 void showNewData() {
     if (newData) {
-        strcpy(mystring, receivedChars);
-        token = strtok(mystring, delimiter);
-
-        strcpy(pump_token, token);
-        //Serial.println(token);
-        token=strtok(nullptr, delimiter);
-
-        strcpy(depth_token, token);
-        //Serial.println(token);
-        token=strtok(nullptr, delimiter);
-
-        strcpy(throughput_token, token);
-        //Serial.println(token);
-        token=strtok(nullptr, delimiter);
-
-        strcpy(fan_token,token);
-        //Serial.println(token);
-        token=strtok(nullptr, delimiter);
-
+        strcpy(myString, receivedChars);
         Serial.print("|");
         Serial.print(receivedChars);
         Serial.println("|");
+
         newData = false;
+        if (strchr(receivedChars,'<') != nullptr && strlen(receivedChars) == 19) {
+            tokenFlag = true;
+        }
+    }
+}
+
+void tokenise() {
+    if (tokenFlag) {
+        token = strtok(myString, delimiter);
+
+        int i = 0;
+        while (token != nullptr) {
+            switch (i) {
+                case 0:
+                    strcpy(pumpData, token);
+                    Serial.print("PumpData\n");
+                    Serial.println(pumpData);
+                    break;
+
+                case 1:
+                    if (*token == 'T') {
+                        analogRead(depth);
+                        Serial.println("Depth");
+                    }
+                    break;
+
+                case 2:
+                    if (*token == 'D') {
+                        analogRead(throughput);
+                        Serial.println("throughput");
+                    }
+                    break;
+
+                case 3:
+                    strcpy(fanData, token);
+                    Serial.print("FanData\n");
+                    Serial.println(fanData);
+                    break;
+
+                default:
+                    Serial.println(token);
+            }
+
+            i++;
+            token=strtok(nullptr, delimiter);
+        }
+
+        tokenFlag = false;
     }
 }
 
@@ -93,6 +123,7 @@ void loop() {
 
     recvWithEndMarker();
     showNewData();
+    tokenise();
 
     //obsolete
 /*
