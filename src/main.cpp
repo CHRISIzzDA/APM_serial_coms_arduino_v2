@@ -11,10 +11,10 @@
 #define fan2 6
 
 char *token;
-const char *delimiter = "<>;";
+const char *delimiter = ";"; //old <>;
 char  myString[64];
-char pumpData[6];
-char fanData[6];
+char pumpData[4];   //old 6
+char fanData[4];    //old 6
 const byte numChars = 64;
 char receivedChars[numChars]; // an array to store the received data
 
@@ -49,14 +49,17 @@ void recvWithEndMarker() {
 void showNewData() {
     if (newData) {
         strcpy(myString, receivedChars);
-        Serial.print("|");
-        Serial.print(receivedChars);
-        Serial.println("|");
+        //Serial.print("|");
+        //Serial.print(receivedChars);
+        //Serial.print("|");
 
         newData = false;
+        tokenFlag = true;
+        /*
         if (strchr(receivedChars,'<') != nullptr && strlen(receivedChars) == 19) {
             tokenFlag = true;
         }
+         */
     }
 }
 
@@ -67,6 +70,22 @@ void tokenise() {
         int i = 0;
         while (token != nullptr) {
             switch (i) {
+                case 0:
+                    strcpy(pumpData, token);
+                    //Serial.print(" - PumpData:");
+                    Serial.print(pumpData);
+                    break;
+                case 1:
+                    strcpy(fanData, token);
+                    //Serial.print(" - FanData:");
+                    Serial.print(";");
+                    Serial.println(fanData);
+                    break;
+                default:
+                    Serial.println(token);
+            }
+            /*
+             switch (i) {
                 case 0:
                     strcpy(pumpData, token);
                     Serial.print("PumpData\n");
@@ -96,6 +115,7 @@ void tokenise() {
                 default:
                     Serial.println(token);
             }
+            */
 
             i++;
             token=strtok(nullptr, delimiter);
