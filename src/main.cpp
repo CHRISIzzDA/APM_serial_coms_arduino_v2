@@ -14,12 +14,14 @@ char *token;
 const char *delimiter = ";"; //old <>;
 char  myString[64];
 char pumpData[4];   //old 6
+int  iPumpData = 0;
 char fanData[4];    //old 6
+int iFanData = 0;
 const byte numChars = 64;
 char receivedChars[numChars]; // an array to store the received data
 
 boolean newData = false;
-boolean tokenFlag = false;
+boolean inputRecieved = false;
 
 
 void recvWithEndMarker() {
@@ -46,25 +48,9 @@ void recvWithEndMarker() {
     }
 }
 
-void showNewData() {
+void setNewData() {
     if (newData) {
         strcpy(myString, receivedChars);
-        //Serial.print("|");
-        //Serial.print(receivedChars);
-        //Serial.print("|");
-
-        newData = false;
-        tokenFlag = true;
-        /*
-        if (strchr(receivedChars,'<') != nullptr && strlen(receivedChars) == 19) {
-            tokenFlag = true;
-        }
-         */
-    }
-}
-
-void tokenise() {
-    if (tokenFlag) {
         token = strtok(myString, delimiter);
 
         int i = 0;
@@ -72,56 +58,40 @@ void tokenise() {
             switch (i) {
                 case 0:
                     strcpy(pumpData, token);
-                    //Serial.print(" - PumpData:");
-                    Serial.print(pumpData);
+                    
+                    //converting into int
+                    iPumpData = atoi(pumpData);
+                    analogWrite(pump, iPumpData);
+                    Serial.print(iPumpData);
                     break;
                 case 1:
                     strcpy(fanData, token);
-                    //Serial.print(" - FanData:");
+                     
                     Serial.print(";");
-                    Serial.println(fanData);
+
+                    //converting into int
+                    iFanData = atoi(fanData);
+                    
+                    Serial.println(iFanData);
                     break;
                 default:
                     Serial.println(token);
             }
-            /*
-             switch (i) {
-                case 0:
-                    strcpy(pumpData, token);
-                    Serial.print("PumpData\n");
-                    Serial.println(pumpData);
-                    break;
-
-                case 1:
-                    if (*token == 'T') {
-                        analogRead(depth);
-                        Serial.println("Depth");
-                    }
-                    break;
-
-                case 2:
-                    if (*token == 'D') {
-                        analogRead(throughput);
-                        Serial.println("throughput");
-                    }
-                    break;
-
-                case 3:
-                    strcpy(fanData, token);
-                    Serial.print("FanData\n");
-                    Serial.println(fanData);
-                    break;
-
-                default:
-                    Serial.println(token);
-            }
-            */
 
             i++;
-            token=strtok(nullptr, delimiter);
+            token = strtok(nullptr, delimiter);
         }
+        newData = false;
+        inputRecieved = true;
+    }
+}
 
-        tokenFlag = false;
+void sendData() {
+    if (inputRecieved) {
+        //sending out Response
+        
+       
+        inputRecieved = false;
     }
 }
 
@@ -139,11 +109,11 @@ void setup() {
     Serial.begin(9600);
 }
 
-void loop() {
+void loop(){
 
     recvWithEndMarker();
-    showNewData();
-    tokenise();
+    setNewData();
+    sendData();
 
     //obsolete
 /*
