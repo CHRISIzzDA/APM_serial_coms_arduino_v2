@@ -1,9 +1,9 @@
 #include <Arduino.h>
 
 #define statusLED 13
-#define pump A0
-#define throughput A1
-#define depth A2
+#define pump 3
+#define depth A0
+#define flow A1
 #define pumpEnable 8
 #define error1 11
 #define error2 10
@@ -32,6 +32,9 @@ int  iPumpData = 0;
 char fanData[4];
 char* endPtrFan;
 int iFanData = 0;
+
+int iDepth = 0;
+int iFlow = 0;
 
 //all Depth values are calculated by depth in m / 0.05859375
 
@@ -76,7 +79,7 @@ boolean inputReceived = false;
 
 
 //Functions
-void recvWithEndMarker() {
+void recWithEndMarker() {
     static byte ndx = 0;
     char endMarker = '\n';
     char rc;
@@ -114,15 +117,32 @@ void setNewData() {
                     //converting into int
                     iPumpData = strtol(pumpData, &endPtrPump, 10);
 
-                    analogWrite(pump, iPumpData);
+                    if (iPumpData != 0)
+                    {
+                        digitalWrite(pumpEnable, HIGH);
+                        analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
+                        //Serial.print("Pump:");
+                        //Serial.print(iPumpData);
+                    }
+                    else
+                    {
+                        digitalWrite(pumpEnable, LOW);
+                        //Serial.print("Zero");
+                    }
+
                     break;
                 case 1:
                     strcpy(fanData, token);
                     //converting into int
                     iFanData = strtol(fanData, &endPtrFan, 10);
 
-                    analogWrite(fan1, iFanData);
-                    analogWrite(fan2, iFanData);
+                    analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
+                    analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
+
+
+                    //Serial.print("\t Fan:");
+                    //Serial.println(iFanData);
+
                     break;
                 default:
                     Serial.println(token);
@@ -138,7 +158,34 @@ void setNewData() {
 
 //----------------------------------------------------------------------
 void sendData() {
+
+
+    iDepth = analogRead(depth);
+    iFlow = analogRead(flow);
+
+    /*
+    Serial.print("P:");
+    Serial.print(iPumpData);
+    Serial.print("\t|F:  ");
+    Serial.print(iFanData);
+
+
+    Serial.print("\t|D: ");
+    Serial.print(iDepth);
+    Serial.print("\t|Fl: ");
+    Serial.println(iFlow);
+    */
+
     if (inputReceived) {
+
+        //Real application
+        /*
+        Serial.print(iDepth);
+        Serial.print(";");
+        Serial.println(iFlow);
+        */
+
+        //Test
 
         switch (iPumpData) {
             case 0:
@@ -188,7 +235,7 @@ void sendData() {
                 Serial.println(iFanData);
                 break;
         }
-
+        
         inputReceived = false;
     }
 }
@@ -200,17 +247,17 @@ void setup() {
     pinMode(pumpEnable, OUTPUT);
     pinMode(fan1, OUTPUT);
     pinMode(fan2, OUTPUT);
-    pinMode(throughput,INPUT);
+    pinMode(flow,INPUT);
     pinMode(depth, INPUT);
     pinMode(error1, INPUT);
     pinMode(error2, INPUT);
 
-    Serial.begin(9600);
+    Serial.begin(115200);
 }
 
 void loop(){
 
-    recvWithEndMarker();
+    recWithEndMarker();
     setNewData();
     sendData();
 
