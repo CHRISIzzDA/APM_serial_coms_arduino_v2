@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define statusLED 13
+#define modeSelect 13
 #define pump 3
 #define depth A0
 #define flow A1
@@ -105,6 +105,8 @@ void recWithEndMarker() {
 
 //------------------------------------------------------------------------
 void setNewData() {
+
+
     if (newData) {
         strcpy(myString, receivedChars);
         token = strtok(myString, delimiter);
@@ -120,13 +122,14 @@ void setNewData() {
                     if (iPumpData != 0)
                     {
                         digitalWrite(pumpEnable, HIGH);
-                        analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
+                        //analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
                         //Serial.print("Pump:");
                         //Serial.print(iPumpData);
                     }
                     else
                     {
                         digitalWrite(pumpEnable, LOW);
+                        //analogWrite(pump, 0);
                         //Serial.print("Zero");
                     }
 
@@ -136,9 +139,8 @@ void setNewData() {
                     //converting into int
                     iFanData = strtol(fanData, &endPtrFan, 10);
 
-                    analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
-                    analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
-
+                    //analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
+                    //analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
 
                     //Serial.print("\t Fan:");
                     //Serial.println(iFanData);
@@ -160,89 +162,97 @@ void setNewData() {
 void sendData() {
 
 
-    iDepth = analogRead(depth);
-    iFlow = analogRead(flow);
 
+    //Debug
     /*
     Serial.print("P:");
     Serial.print(iPumpData);
-    Serial.print("\t|F:  ");
+    Serial.print("   |F:  ");
     Serial.print(iFanData);
 
-
-    Serial.print("\t|D: ");
+    Serial.print("   |D: ");
     Serial.print(iDepth);
-    Serial.print("\t|Fl: ");
+    Serial.print("   |Fl: ");
     Serial.println(iFlow);
     */
 
+
+
     if (inputReceived) {
 
-        //Real application
-        /*
-        Serial.print(iDepth);
-        Serial.print(";");
-        Serial.println(iFlow);
-        */
+        if (digitalRead(modeSelect))
+        {
 
-        //Test
+            //Test
+            ///*
+            switch (iPumpData) {
+                case 0:
+                    if (iFanData == 0) {
+                        Serial.print(dataLvl1[dataCounterLvl1]._depth);
+                        Serial.print(";");
+                        Serial.println(dataLvl1[dataCounterLvl1]._flow);
 
-        switch (iPumpData) {
-            case 0:
-                if (iFanData == 0) {
-                    Serial.print(dataLvl1[dataCounterLvl1]._depth);
-                    Serial.print(";");
-                    Serial.println(dataLvl1[dataCounterLvl1]._flow);
-                    if (dataCounterLvl1 < (sizeof(dataLvl1) / sizeof(Pair_16_t) )- 1) {
-                        ++dataCounterLvl1;
+                        if (dataCounterLvl1 < (sizeof(dataLvl1) / sizeof(Pair_16_t) )- 1) {
+                            ++dataCounterLvl1;
+                        }
+                    }else {
+                        Serial.print(dataLvl5[dataCounterLvl5]._depth);
+                        Serial.print(";");
+                        Serial.println(dataLvl5[dataCounterLvl5]._flow);
+                        if (dataCounterLvl5 < (sizeof(dataLvl5) / sizeof(Pair_16_t)) - 1) {
+                            ++dataCounterLvl5;
+                        }
                     }
-                }else {
-                    Serial.print(dataLvl5[dataCounterLvl5]._depth);
+                    break;
+                case 100:
+                    Serial.print(dataLvl2[dataCounterLvl2]._depth);
                     Serial.print(";");
-                    Serial.println(dataLvl5[dataCounterLvl5]._flow);
-                    if (dataCounterLvl5 < (sizeof(dataLvl5) / sizeof(Pair_16_t)) - 1) {
-                        ++dataCounterLvl5;
+                    Serial.println(dataLvl2[dataCounterLvl2]._flow);
+                    if (dataCounterLvl2 < (sizeof(dataLvl2) / sizeof(Pair_16_t) )- 1) {
+                        ++dataCounterLvl2;
                     }
-                }
-                break;
-            case 100:
-                Serial.print(dataLvl2[dataCounterLvl2]._depth);
-                Serial.print(";");
-                Serial.println(dataLvl2[dataCounterLvl2]._flow);
-                if (dataCounterLvl2 < (sizeof(dataLvl2) / sizeof(Pair_16_t) )- 1) {
-                    ++dataCounterLvl2;
-                }
-                break;
-            case 500:
-                Serial.print(dataLvl3[dataCounterLvl3]._depth);
-                Serial.print(";");
-                Serial.println(dataLvl3[dataCounterLvl3]._flow);
-                if (dataCounterLvl3 < (sizeof(dataLvl3) / sizeof(Pair_16_t) )- 1) {
-                    ++dataCounterLvl3;
-                }
-                break;
-            case 1000:
-                Serial.print(dataLvl4[dataCounterLvl4]._depth);
-                Serial.print(";");
-                Serial.println(dataLvl4[dataCounterLvl4]._flow);
-                if (dataCounterLvl4 < (sizeof(dataLvl4) / sizeof(Pair_16_t) )- 1) {
-                    ++dataCounterLvl4;
-                }
-                break;
-            default:
-                Serial.print(iPumpData);
-                Serial.print(";");
-                Serial.println(iFanData);
-                break;
+                    break;
+                case 500:
+                    Serial.print(dataLvl3[dataCounterLvl3]._depth);
+                    Serial.print(";");
+                    Serial.println(dataLvl3[dataCounterLvl3]._flow);
+                    if (dataCounterLvl3 < (sizeof(dataLvl3) / sizeof(Pair_16_t) )- 1) {
+                        ++dataCounterLvl3;
+                    }
+                    break;
+                case 900:
+                    Serial.print(dataLvl4[dataCounterLvl4]._depth);
+                    Serial.print(";");
+                    Serial.println(dataLvl4[dataCounterLvl4]._flow);
+                    if (dataCounterLvl4 < (sizeof(dataLvl4) / sizeof(Pair_16_t) )- 1) {
+                        ++dataCounterLvl4;
+                    }
+                    break;
+                default:
+                    Serial.print(iPumpData);
+                    Serial.print(";");
+                    Serial.println(iFanData);
+                    break;
+            }
+            //*/
         }
-        
+        else
+        {
+            //Real application
+            ///*
+            Serial.print(iDepth);
+            Serial.print(";");
+            Serial.println(iFlow);
+            //*/
+
+        }
         inputReceived = false;
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
 
 void setup() {
-    pinMode(statusLED, OUTPUT);
+    pinMode(modeSelect, INPUT);
     pinMode(pump, OUTPUT);
     pinMode(pumpEnable, OUTPUT);
     pinMode(fan1, OUTPUT);
@@ -256,6 +266,19 @@ void setup() {
 }
 
 void loop(){
+    iDepth = analogRead(depth);
+    iFlow = analogRead(flow);
+
+    analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
+    analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
+    analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
+
+
+    analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
+    analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
+    analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
+
+
 
     recWithEndMarker();
     setNewData();
