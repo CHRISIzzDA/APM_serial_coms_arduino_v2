@@ -2,13 +2,14 @@
 
 #define modeSelect 13
 #define pump 3
-#define depth A0
-#define flow A1
+#define depth A1
+#define flow A2
 #define pumpEnable 8
 #define error1 11
 #define error2 10
 #define fan1 9
 #define fan2 6
+#define chargePump 5
 
 typedef struct
 {
@@ -180,11 +181,18 @@ void sendData() {
 
     if (inputReceived) {
 
+
+        //Real application
+        Serial.print(iDepth);
+        Serial.print(";");
+        Serial.println(iFlow);
+
+        /*
         if (digitalRead(modeSelect))
         {
 
             //Test
-            ///*
+
             switch (iPumpData) {
                 case 0:
                     if (iFanData == 0) {
@@ -234,20 +242,23 @@ void sendData() {
                     Serial.println(iFanData);
                     break;
             }
-            //*/
+
         }
         else
         {
             //Real application
-            ///*
+
             Serial.print(iDepth);
             Serial.print(";");
             Serial.println(iFlow);
-            //*/
+
 
         }
+        */
+
         inputReceived = false;
     }
+
 }
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -257,6 +268,7 @@ void setup() {
     pinMode(pumpEnable, OUTPUT);
     pinMode(fan1, OUTPUT);
     pinMode(fan2, OUTPUT);
+    pinMode(chargePump, OUTPUT);
     pinMode(flow,INPUT);
     pinMode(depth, INPUT);
     pinMode(error1, INPUT);
@@ -269,14 +281,16 @@ void loop(){
     iDepth = analogRead(depth);
     iFlow = analogRead(flow);
 
+    analogWrite(chargePump, 128);
+
     analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
     analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
     analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
 
 
-    analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
-    analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
-    analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
+    //analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
+    //analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
+    //analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
 
 
 
