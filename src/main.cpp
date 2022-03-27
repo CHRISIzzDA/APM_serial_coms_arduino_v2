@@ -2,13 +2,12 @@
 
 #define modeSelect 13
 #define pump 3
-#define depth A1
-#define flow A2
-#define pumpEnable 8
+#define depth A2
+#define flow A1
 #define error1 11
 #define error2 10
+#define pumpEnable 6
 #define fan1 9
-#define fan2 6
 #define chargePump 5
 
 typedef struct
@@ -36,6 +35,15 @@ int iFanData = 0;
 
 int iDepth = 0;
 int iFlow = 0;
+
+int ringBuffer[50];
+int ringNum = 0;
+int ringSum = 0;
+
+int ringBufferFlow[25];
+int ringNumFlow = 0;
+int ringSumFlow = 0;
+
 
 //all Depth values are calculated by depth in m / 0.05859375
 
@@ -122,14 +130,16 @@ void setNewData() {
 
                     if (iPumpData != 0)
                     {
-                        digitalWrite(pumpEnable, HIGH);
+                        digitalWrite(pumpEnable, LOW);
+
                         //analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
                         //Serial.print("Pump:");
                         //Serial.print(iPumpData);
                     }
                     else
                     {
-                        digitalWrite(pumpEnable, LOW);
+                        digitalWrite(pumpEnable, HIGH);
+
                         //analogWrite(pump, 0);
                         //Serial.print("Zero");
                     }
@@ -183,9 +193,10 @@ void sendData() {
 
 
         //Real application
-        Serial.print(iDepth);
+        Serial.print(map(iDepth, 202, 219, 0, 1024));
         Serial.print(";");
-        Serial.println(iFlow);
+        Serial.println(map(iFlow, 210, 975, 0, 1024));
+        //Serial.println(analogRead(flow));
 
         /*
         if (digitalRead(modeSelect))
@@ -267,25 +278,67 @@ void setup() {
     pinMode(pump, OUTPUT);
     pinMode(pumpEnable, OUTPUT);
     pinMode(fan1, OUTPUT);
-    pinMode(fan2, OUTPUT);
     pinMode(chargePump, OUTPUT);
     pinMode(flow,INPUT);
     pinMode(depth, INPUT);
     pinMode(error1, INPUT);
     pinMode(error2, INPUT);
 
+    digitalWrite(pumpEnable, HIGH);
+
+    for (int i = 0; i < 50; ++i) {
+        ringBuffer[i] = 0;
+    }
+
+    for (int i = 0; i < 25; ++i) {
+        ringBufferFlow[i] = 0;
+    }
+
     Serial.begin(115200);
 }
 
 void loop(){
-    iDepth = analogRead(depth);
-    iFlow = analogRead(flow);
+
+    if (ringNum < 50)
+    {
+        ringBuffer[ringNum] = analogRead(depth);
+        ringNum++;
+    }
+    else
+    {
+        ringNum = 0;
+        ringBuffer[ringNum] = analogRead(depth);
+    }
+
+    for (int i = 0; i < 50; ++i) {
+        ringSum += ringBuffer[i];
+    }
+
+    iDepth = ringSum/50;
+    ringSum = 0;
+
+    if (ringNumFlow < 25)
+    {
+        ringBufferFlow[ringNumFlow] = analogRead(flow);
+        ringNumFlow++;
+    }
+    else
+    {
+        ringNumFlow = 0;
+        ringBufferFlow[ringNumFlow] = analogRead(flow);
+    }
+
+    for (int i = 0; i < 25; ++i) {
+        ringSumFlow += ringBufferFlow[i];
+    }
+
+    iFlow = ringSumFlow/25;
+    ringSumFlow = 0;
 
     analogWrite(chargePump, 128);
 
     analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
     analogWrite(fan1, map(iFanData, 0, 1023, 0, 255));
-    analogWrite(fan2, map(iFanData, 0, 1023, 0, 255));
 
 
     //analogWrite(pump, map(iPumpData, 0, 1023, 0, 255));
